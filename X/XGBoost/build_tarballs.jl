@@ -9,7 +9,7 @@ include(joinpath(YGGDRASIL_DIR, "platforms", "cuda.jl"))
 
 # Collection of sources required to build XGBoost
 sources = [
-    GitSource("https://github.com/dmlc/xgboost.git","36ad160501251336bfe69b602acc37ab3ec32d69"), 
+    GitSource("https://github.com/dmlc/xgboost.git","36ad160501251336bfe69b602acc37ab3ec32d69"),
     DirectorySource("./bundled"),
 ]
 
@@ -27,7 +27,7 @@ if  [[ $bb_full_target == x86_64-linux*cuda* ]]; then
     # make it use the workspace instead
     export TMPDIR=${WORKSPACE}/tmpdir
     mkdir ${TMPDIR}
-    
+
     export CUDA_HOME=${WORKSPACE}/destdir/cuda
     export PATH=$PATH:$CUDA_HOME/bin
     cmake .. -DCMAKE_INSTALL_PREFIX=${prefix} \
@@ -37,7 +37,7 @@ if  [[ $bb_full_target == x86_64-linux*cuda* ]]; then
             -DBUILD_WITH_CUDA_CUB=ON
     make -j${nproc}
 else
-    cmake .. -DCMAKE_INSTALL_PREFIX=${prefix} -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TARGET_TOOLCHAIN}" 
+    cmake .. -DCMAKE_INSTALL_PREFIX=${prefix} -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TARGET_TOOLCHAIN}"
     make -j${nproc}
 fi
 
@@ -57,15 +57,12 @@ fi
 install_license LICENSE
 """
 
-cuda_full_versions = Dict(
-    v"11.0" => v"11.0.3",
-)
 cuda_version = v"11.0"
 
 # These are the platforms we will build for by default, unless further
 # platforms are passed in on the command line
 platforms = expand_cxxstring_abis(supported_platforms())
-cuda_platforms = expand_cxxstring_abis(Platform("x86_64", "linux"; 
+cuda_platforms = expand_cxxstring_abis(Platform("x86_64", "linux";
                                         cuda=CUDA.platform(cuda_version)))
 
 for p in cuda_platforms
@@ -86,14 +83,14 @@ dependencies = [
     Dependency(PackageSpec(name="CompilerSupportLibraries_jll", uuid="e66e0078-7015-5450-92f7-15fbd957f2ae"); platforms=filter(!Sys.isbsd, platforms)),
     Dependency(PackageSpec(name="LLVMOpenMP_jll", uuid="1d63c593-3942-5779-bab2-d838dc0a180e"); platforms=filter(Sys.isbsd, platforms)),
 
-    # You can only specify one cuda version in the deps. To build against more than 
+    # You can only specify one cuda version in the deps. To build against more than
     # one cuda version, you have to include them as Archive Sources. (see Torch_jll)
-    BuildDependency(PackageSpec(name="CUDA_full_jll", version=cuda_full_versions[cuda_version]), platforms=cuda_platforms),
+    BuildDependency(PackageSpec(name="CUDA_full_jll", version=CUDA.full_version(cuda_version)), platforms=cuda_platforms),
     RuntimeDependency(PackageSpec(name="CUDA_Runtime_jll"), platforms=cuda_platforms),
 ]
 
 # Build the tarballs, and possibly a `build.jl` as well.
-build_tarballs(ARGS, name, version, sources, script, platforms, products, dependencies; 
-                preferred_gcc_version=v"8", 
+build_tarballs(ARGS, name, version, sources, script, platforms, products, dependencies;
+                preferred_gcc_version=v"8",
                 julia_compat="1.6",
                 augment_platform_block=CUDA.augment)
